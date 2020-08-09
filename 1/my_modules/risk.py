@@ -19,32 +19,9 @@ def drawdown(return_series: pd.Series):
         "Drawdown": drawdowns
     })
 
-def get_ffme_returns(col_1='Lo 10',col_2='Hi 10', name_1='Small Cap', name_2='Large Cap'):
-    """
-    Load the Fama-French Market Equity dataset for the Top and Bottom Deciles by market cap
-    """
-    me_monthly = pd.read_csv('./data/Portfolios_Formed_on_ME_monthly_EW.csv',
-                            header=0,index_col=0,na_values=-99.99)
-   
-    returns = me_monthly[[col_1, col_2]]
-    returns.columns = [name_1, name_2]
-    returns = returns/100
-    returns.index = pd.to_datetime(returns.index, format='%Y%m').to_period('M')
-    return returns
-
 def drawdown_info(return_series: pd.Series, column):
     """Takes a series and returns a formatted String with the occurance and size of the max drawdown"""
     return 'The max drawdown occured {0!r} and was {1!r}'.format(drawdown(return_series[column])['Drawdown'].idxmin(), drawdown(return_series[column])['Drawdown'].min())
-
-def get_hfi_returns():
-    """
-    Load and format the EDHEC HEdge Fund Index Returns
-    """
-    hfi = pd.read_csv('./data/edhec-hedgefundindices.csv',
-                            header=0,index_col=0,parse_dates=True)
-    hfi = hfi/100
-    hfi.index = hfi.index.to_period('M')
-    return hfi
   
 def semideviation(r):
   """
@@ -131,3 +108,26 @@ def is_normal(r, level=0.01):
   """
   statistic, p_value = scipy.stats.jarque_bera(r)
   return p_value > level
+
+def annualise_rets(r, periods_in_year=12):
+  """
+  Annualise the returns of a DataFrame or Series
+  Default periods in year is for monthly data. If it were daily then it would be ca 252
+  """
+  return (r + 1).prod() ** (periods_in_year/r.shape[0]) - 1
+
+def annualise_vol(r, periods_in_year=12):
+  """
+  Annualise the volatility of a DataFrame or Series
+  """
+  return r.std() * np.sqrt(periods_in_year)
+
+def sharpe_ratio(r, risk_free_rate, periods_in_year=12):
+  """
+  Returns the annualised Sharpe ratio
+  """
+  rf_per_period = (1 + risk_free_rate)**(1/periods_in_year)-1
+  excess_return = r - rf_per_period
+  ann_ex_return = annualise_rets(excess_return, periods_in_year)
+  ann_volatility = annualise_vol(r, periods_in_year)
+  return ann_ex_return/ann_volatility
