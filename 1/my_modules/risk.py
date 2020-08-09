@@ -19,15 +19,15 @@ def drawdown(return_series: pd.Series):
         "Drawdown": drawdowns
     })
 
-def get_ffme_returns():
+def get_ffme_returns(col_1='Lo 10',col_2='Hi 10', name_1='Small Cap', name_2='Large Cap'):
     """
     Load the Fama-French Market Equity dataset for the Top and Bottom Deciles by market cap
     """
     me_monthly = pd.read_csv('./data/Portfolios_Formed_on_ME_monthly_EW.csv',
                             header=0,index_col=0,na_values=-99.99)
    
-    returns = me_monthly[['Lo 10', 'Hi 10']]
-    returns.columns = ['Small Cap', 'Large Cap']
+    returns = me_monthly[[col_1, col_2]]
+    returns.columns = [name_1, name_2]
     returns = returns/100
     returns.index = pd.to_datetime(returns.index, format='%Y%m').to_period('M')
     return returns
