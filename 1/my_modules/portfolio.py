@@ -106,7 +106,15 @@ def __neg_sharpe_ratio(weights, riskfree_rate, er, cov):
   vol = volatility(weights, cov)
   return -(ret - riskfree_rate)/ vol
 
-def plot_n_asset_frontier(num_points, ex_return, cov, show_cml=False, riskfree_rate=0, style='.-'):
+def __gmv(cov):
+  """
+  Returns weights of the global minimum portfolio
+  """
+  # Calculating the Sharpe Ratio when returns are the same the only thing to optimise is the volality
+  n = cov.shape[0]
+  return msrp(0, np.repeat(1, n), cov)
+
+def plot_n_asset_frontier(num_points, ex_return, cov, show_cml=False, show_ew=False, show_gmv=False, riskfree_rate=0, style='.-'):
   """
   Plots the efficient frontier for an n asset mix
   """
@@ -119,6 +127,17 @@ def plot_n_asset_frontier(num_points, ex_return, cov, show_cml=False, riskfree_r
   })
                           
   ax = frontier.plot.line(x='Volatility', y='Returns', style=style)
+  if(show_ew):
+    n = ex_return.shape[0]
+    w_ew = np.repeat(1/n, n)
+    r_ew = returns(w_ew, ex_return)
+    v_ew = volatility(w_ew, cov)
+    ax.plot([v_ew], [r_ew], color='goldenrod', marker='o', markersize=9)
+  if(show_gmv):
+    w_gmv = __gmv(cov)
+    r_gmv = returns(w_gmv, ex_return)
+    v_gmv = volatility(w_gmv, cov)
+    ax.plot([v_gmv], [r_gmv], color='limegreen', marker='*', markersize=16)
   if(show_cml):
     ax.set_xlim(left=0)
     w_msr = msrp(riskfree_rate, ex_return, cov)
@@ -129,4 +148,5 @@ def plot_n_asset_frontier(num_points, ex_return, cov, show_cml=False, riskfree_r
     cml_y = [riskfree_rate, r_msr]
     ax.plot(cml_x, cml_y, color='green', marker='o', linestyle='dashed', markersize=9, linewidth=2)
   return ax
+
   
