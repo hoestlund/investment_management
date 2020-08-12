@@ -106,7 +106,7 @@ def __neg_sharpe_ratio(weights, riskfree_rate, er, cov):
   vol = volatility(weights, cov)
   return -(ret - riskfree_rate)/ vol
 
-def __gmv(cov):
+def gmv(cov):
   """
   Returns weights of the global minimum portfolio
   """
@@ -134,7 +134,7 @@ def plot_n_asset_frontier(num_points, ex_return, cov, show_cml=False, show_ew=Fa
     v_ew = volatility(w_ew, cov)
     ax.plot([v_ew], [r_ew], color='goldenrod', marker='o', markersize=9)
   if(show_gmv):
-    w_gmv = __gmv(cov)
+    w_gmv = gmv(cov)
     r_gmv = returns(w_gmv, ex_return)
     v_gmv = volatility(w_gmv, cov)
     ax.plot([v_gmv], [r_gmv], color='limegreen', marker='*', markersize=16)

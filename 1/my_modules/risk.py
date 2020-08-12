@@ -33,7 +33,8 @@ def semideviation(r):
 def var_historic(r, level=5):
   """
   VaR Historic
-  When using the numpy array we lose the column information
+  When using the numpy array we lose the column information.
+  Should be applied to a mix, but have the option to give a single without raising error
   """
   # Calls the function again but with every individual Series
   if isinstance(r, pd.DataFrame):
