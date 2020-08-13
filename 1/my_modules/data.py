@@ -31,3 +31,21 @@ def get_ind30_vw_returns():
   ind.index = pd.to_datetime(ind.index, format='%Y%m').to_period('M')
   ind.columns = ind.columns.str.strip()
   return ind
+
+def get_ind30_size():
+  """
+  Load the industry 30 monthly returns
+  """
+  ind = pd.read_csv('./data/ind30_m_size.csv',header=0, index_col=0, parse_dates=True)
+  ind.index = pd.to_datetime(ind.index, format='%Y%m').to_period('M')
+  ind.columns = ind.columns.str.strip()
+  return ind
+
+def get_ind30_nfirms():
+  """
+  Load the industry 30 monthly returns
+  """
+  ind = pd.read_csv('./data/ind30_m_nfirms.csv',header=0, index_col=0, parse_dates=True)
+  ind.index = pd.to_datetime(ind.index, format='%Y%m').to_period('M')
+  ind.columns = ind.columns.str.strip()
+  return ind
