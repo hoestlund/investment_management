@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
+from my_modules import risk
 
 def returns(weights, returns):
   """
@@ -98,6 +99,66 @@ def msrp(riskfree_rate, er, cov):
                       )
     return results.x
   
+def cppi(risky_r, safe_r=None, start_value=1000, floor=0.8, m=3, riskfree_rate=0.03, drawdown=None):
+  """
+  Returns the backtest of a CPPI allocation strategy given a static floor level.
+  Floor value given as a percentage of the start_value in form of 0.x
+  If drawdown (constraint) the floor value is no longer static
+  """
+  dates = risky_r.index
+  n_steps = len(dates)
+  account_value = start_value
+  floor_value = start_value * floor
+  peak = start_value
+  
+  if isinstance(risky_r, pd.Series):
+    risky_r = pd.DataFrame(risky_r, columns=['R'])
+    
+  if safe_r is None:
+    safe_r = pd.DataFrame().reindex_like(risky_r)
+    safe_r.values[:] = riskfree_rate / 12
+    
+  # Save backtest, running the algorithm across past values
+  account_history = pd.DataFrame().reindex_like(risky_r)
+  cushion_history = pd.DataFrame().reindex_like(risky_r)
+  risky_weight_history = pd.DataFrame().reindex_like(risky_r)
+
+  for step in range(n_steps):
+    if drawdown is not None:
+      peak = np.maximum(peak, account_value)
+      floor_value = peak*(1-drawdown)
+    cushion = (account_value - floor_value)/account_value
+    risky_w = m*cushion
+    # Don't lever or go short
+    risky_w = np.minimum(risky_w, 1)
+    risky_w = np.maximum(risky_w, 0)
+    safe_w = 1 - risky_w
+    risky_alloc = account_value * risky_w
+    safe_alloc = account_value * safe_w
+    ## Update account value for t
+    account_value = risky_alloc * (1 + risky_r.iloc[step]) + safe_alloc * (1 + safe_r.iloc[step])
+    ## Save values to plot history
+    account_history.iloc[step] = account_value
+    cushion_history.iloc[step] = cushion
+    risky_weight_history.iloc[step] = risky_w
+    
+  risky_wealth = start_value*(1+risky_r).cumprod()
+    
+  backtest_result = {
+    "Wealth" : account_history,
+    "Risky Wealth" : risky_wealth,
+    "Risk Budget" : cushion_history,
+    "Risky Allocation" : risky_weight_history,
+    "m" : m,
+    "Start" : start_value,
+    "Floor" : floor,
+    "risky_r" : risky_r,
+    "safe_r" : safe_r
+  }
+  
+  return backtest_result
+  
+  
 def __neg_sharpe_ratio(weights, riskfree_rate, er, cov):
   """
   Returns the negative of the sharpe ratio, given weights
@@ -149,4 +210,26 @@ def plot_n_asset_frontier(num_points, ex_return, cov, show_cml=False, show_ew=Fa
     ax.plot(cml_x, cml_y, color='green', marker='o', linestyle='dashed', markersize=9, linewidth=2)
   return ax
 
+def summary_stats(r, riskfree_rate=0.03):
+  """
+  DataFrame of summary statistics
+  """
+  ann_r = r.aggregate(risk.annualise_rets)
+  ann_vol = r.aggregate(risk.annualise_vol)
+  ann_sr = r.aggregate(risk.sharpe_ratio, risk_free_rate=riskfree_rate)
+  dd = r.aggregate(lambda r: risk.drawdown(r).Drawdown.min())
+  skew = r.aggregate(risk.skewness)
+  kurtosis = r.aggregate(risk.kurtosis)
+  cf_var5 = r.aggregate(risk.var_cornish_fisher)
+  hist_cvar = r.aggregate(risk.cvar_historic)
   
+  return pd.DataFrame({
+    "Annualised Return" : ann_r,
+    "Annulised Volatility" : ann_vol,
+    "Max Drawdown" : dd,
+    "Skew" : skew,
+    "Kurtosis" : kurtosis,
+    "Cornish-Fisher VaR (5%)" : cf_var5,
+    "Historic CVaR (5%)" : hist_cvar,
+    "Annualised Sharpe Ration" : ann_sr
+  })
