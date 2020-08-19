@@ -233,3 +233,20 @@ def summary_stats(r, riskfree_rate=0.03):
     "Historic CVaR (5%)" : hist_cvar,
     "Annualised Sharpe Ration" : ann_sr
   })
+
+def pv(l,r):
+    """
+    Compute the present value of a sequence of liabilities
+    l is indexed by time, and values are the amounts of each liability
+    returns the present value of the sequence
+    """
+    dates = l.index
+    discounts = discount(dates,r)
+    return (discounts * l).sum()
+
+def funding_ratio(assets, liabilities, r):
+    """
+    Computes funding ratio given a set of assets, liabilites and a constant interest rate where l is a series of liabilites with the time until maturity
+    """
+    return assets/pv(liabilities, r)
+  
