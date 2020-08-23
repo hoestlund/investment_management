@@ -233,7 +233,13 @@ def summary_stats(r, riskfree_rate=0.03):
     "Historic CVaR (5%)" : hist_cvar,
     "Annualised Sharpe Ration" : ann_sr
   })
-
+def discount(t, interest_rate):
+    """
+    Compute the price of a pure discount bond that pays a dollar at time t, given interest rate r.
+    Assumes that the yield curve is flat (duration does not matter)
+    """
+    return (1 + interest_rate)**-t # 1 over (1 + r)^t
+  
 def pv(l,r):
     """
     Compute the present value of a sequence of liabilities
