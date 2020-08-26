@@ -254,5 +254,42 @@ def funding_ratio(assets, liabilities, r):
     """
     Computes funding ratio given a set of assets, liabilites and a constant interest rate where l is a series of liabilites with the time until maturity
     """
-    return assets/pv(liabilities, r)
+    return pv(assets,r)/pv(liabilities, r)
   
+def bond_cash_flows(maturity, principal=100, coupon_rate=0.03, coupons_pa=12):
+    """
+    Returns as series of cash flows from the bond, indexed by the coupon number
+    """
+    n_coupons = round(maturity*coupons_pa)
+    coupon_amount = principal * coupon_rate/coupons_pa
+    coupon_times = np.arange(1, n_coupons + 1)
+    cash_flows = pd.Series(data=coupon_amount, index=coupon_times)
+    cash_flows.iloc[-1] += principal #The final coupon payment will also return principal
+    return cash_flows
+  
+def bond_price(maturity, principal=100, coupon_rate=0.03, coupons_pa=12, discount_rate=0.03):
+    """
+    Returns the price of a bond based on its maturity, coupon rate, and coupons per years as well as a 
+    discount rate
+    """
+    cash_flows = bond_cash_flows(maturity, principal, coupon_rate, coupons_pa)
+    return pv(cash_flows, discount_rate/coupons_pa) #discount rate per period
+  
+def macaulay_duration(cash_flows, discount_rate):
+    """
+    Computes the Macaulay Duration of the bond based on the cash flows and the discount rate
+    """
+    discounted_flows = discount(cash_flows.index, discount_rate) * cash_flows
+    weights = discounted_flows/discounted_flows.sum()
+    return np.average(discounted_flows.index,weights=weights)
+  
+def match_durations(cashflows_target, cashflows_shortbond, cashflows_longbond, discount_rate):
+    """
+    Find the weight of the short bond so that, together with 1 - short bond weight, there will be an duration
+    that matches the cashflows of the target
+    """
+    d_target = macaulay_duration(cashflows_target, discount_rate)
+    d_short = macaulay_duration(cashflows_shortbond, discount_rate)
+    d_long = macaulay_duration(cashflows_longbond, discount_rate)
+    
+    return (d_long - d_target) / (d_long - d_short)
