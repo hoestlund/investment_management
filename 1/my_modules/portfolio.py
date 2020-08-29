@@ -233,22 +233,24 @@ def summary_stats(r, riskfree_rate=0.03):
     "Historic CVaR (5%)" : hist_cvar,
     "Annualised Sharpe Ration" : ann_sr
   })
-def discount(t, interest_rate):
+def discount(t, r):
     """
-    Compute the price of a pure discount bond that pays a dollar at time t, given interest rate r.
-    Assumes that the yield curve is flat (duration does not matter)
+    Compute the price of a pure discount bond that pays a dollar at time t, given annual interest rate r.
+    Assumes that the yield curve is flat (duration does not matter).
+    Returns a  |t| x |r| Series or DataFrame (df indexed by t)
+    r can be a float, Series, or DataFrame
     """
-    return (1 + interest_rate)**-t # 1 over (1 + r)^t
+    discounts = pd.DataFrame([(1 + r)**-i] for i in t)
+    discounts.index = t
+    return  discounts
   
-def pv(l,r):
+def pv(flows,r):
     """
-    Compute the present value of a sequence of liabilities
-    l is indexed by time, and values are the amounts of each liability
-    returns the present value of the sequence
+    Compute the present value of a sequence of cash flows given by the time (index) and amounts r can be scalar, Series, or DataFrame with the number of rows matching the nums of rows in flows
     """
-    dates = l.index
+    dates = flows.index
     discounts = discount(dates,r)
-    return (discounts * l).sum()
+    return discounts.multiply(flows, axis='rows').sum()
 
 def funding_ratio(assets, liabilities, r):
     """
