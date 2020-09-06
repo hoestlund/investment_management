@@ -115,7 +115,7 @@ def annualise_rets(r, periods_in_year=12):
   Annualise the returns of a DataFrame or Series
   Default periods in year is for monthly data. If it were daily then it would be ca 252
   """
-  return (r + 1).prod() ** (periods_in_year/r.shape[0]) - 1
+  return (1 + r).prod() ** (periods_in_year/r.shape[0]) - 1
 
 def annualise_vol(r, periods_in_year=12):
   """

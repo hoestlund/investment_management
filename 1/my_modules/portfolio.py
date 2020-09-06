@@ -233,6 +233,37 @@ def summary_stats(r, riskfree_rate=0.03):
     "Historic CVaR (5%)" : hist_cvar,
     "Annualised Sharpe Ration" : ann_sr
   })
+
+def terminal_values(rets):
+  """
+  Returns the final dollar values of the return period for each scenario
+  """
+  return (rets + 1).prod()
+
+def terminal_stats(rets, floor = 0.8, cap=np.inf, name="Stats"):
+    """
+    Produce Summary Statistics on the terminal values per invested dollar
+    across a range of N scenarios
+    rets is a T x N DataFrame of returns, where T is the time-step (we assume rets is sorted by time)
+    Returns a 1 column DataFrame of Summary Stats indexed by the stat name 
+    """
+    terminal_wealth = (rets+1).prod()
+    breach = terminal_wealth < floor #How often below floor
+    reach = terminal_wealth >= cap #Was the cap reached
+    p_breach = breach.mean() if breach.sum() > 0 else np.nan
+    p_reach = reach.mean() if reach.sum() > 0 else np.nan
+    e_short = (floor-terminal_wealth[breach]).mean() if breach.sum() > 0 else np.nan #expected shortfall
+    e_surplus = (-cap+terminal_wealth[reach]).mean() if reach.sum() > 0 else np.nan #expected surplus
+    sum_stats = pd.DataFrame.from_dict({
+        "mean": terminal_wealth.mean(),
+        "std" : terminal_wealth.std(),
+        "p_breach": p_breach,
+        "e_short":e_short,
+        "p_reach": p_reach,
+        "e_surplus": e_surplus
+    }, orient="index", columns=[name])
+    return sum_stats
+  
 def discount(t, r):
     """
     Compute the price of a pure discount bond that pays a dollar at time t, given annual interest rate r.
