@@ -355,3 +355,36 @@ def match_durations(cashflows_target, cashflows_shortbond, cashflows_longbond, d
     d_long = macaulay_duration(cashflows_longbond, discount_rate)
     
     return (d_long - d_target) / (d_long - d_short)
+
+def bt_mix(r1, r2, allocator, **kwargs):
+  """
+  Runs a back test on two sets of returns (r1 and r2) that have an equal shape. 
+  Produces an  allocation of the first portfolio as a T * 1 DataFrame.
+  Returns a T * N DataFrame of the resulting N portfolio scenarios.
+  """
+  if not r1.shape == r2.shape:
+      raise ValueError("r1 and r2 need to be the same shape")
+
+  weights = allocator(r1,r2,**kwargs)
+  if not weights.shape == r1.shape:
+      raise ValueError("Allocator did not returns weights that match r1")
+
+  r_mix = weights*r1 + (1-weights)*r2
+  return r_mix
+    
+def fixedmix_allocator(r1,r2,w1, **kwargs):
+  return pd.DataFrame(data=w1, index=r1.index, columns=r1.columns)
+  
+  
+def glidepath_allocator(r1, r2, start_glide=1, end_glide=0):
+  """
+  Simulates a target-date fund-stype gradual move from r1 to r2.
+  """
+  n_points = r1.shape[0]
+  n_col = r1.shape[1]
+  path = pd.Series(data=np.linspace(start_glide, end_glide, num=n_points))
+  # Want to replicate the amound of rows in the data frame
+  paths = pd.concat([path]*n_col, axis=1)
+  paths.index = r1.index
+  paths.columns = r1.columns
+  return paths
