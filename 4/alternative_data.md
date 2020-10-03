@@ -47,4 +47,6 @@
   * Kaggle Twitter dataset
   
 
-  
+## Some resources
+i.) NYC Transportation: https://data.cityofnewyork.us/Transportation/2017-Yellow-Taxi-Trip-Data/biws-g3hs  
+ii.) Amazon Reviews: http://jmcauley.ucsd.edu/data/amazon/
