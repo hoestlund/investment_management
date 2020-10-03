@@ -38,6 +38,21 @@
   
 ## The Open Web
   * Extracting macro, sector, and company information from the internet
+  * Can use:
+    * websites: personal, corporate, blog
+    * references: wikipedia, investopedia, Ox dictionary for banking and finance
+    * government: disclosures on contracts, which companies wwon/lost contracts
+  * Use it to understand trends
+    * Employment
+    * Production
+    * Connections between firms
+    * Connections across industries
+    
+  * Four step process to insight
+    * Indentify source(s)
+    * Extract the data
+    * Textually analyse the data
+    * Feed the analysed data into a financial market application
 
 ## Corporate and regulatory disclosures
   * Using Edgar
